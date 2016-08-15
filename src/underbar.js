@@ -50,6 +50,7 @@
   // iterator function over each item in the input collection.
   _.each = function(collection, iterator) {
     var result;
+    //case1: collection is an Array
     if(Array.isArray(collection)){
       for(var i=0; i<collection.length; i++){
         if(result == null)
@@ -57,6 +58,7 @@
         result.push(iterator(collection[i],i,collection));
       }
     }
+    //case2: collection is an object, but not an array 
     else if(typeof(collection)==="object"){
            for(var key in collection){
              if(result == null)
@@ -110,21 +112,61 @@
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array) {
-    /*
+    
     var iterator;
     var isSorted = false;
     var result = [];
+    var resultTrans = [];
+    var currentValue;
 
-    if(arguments.length>2) {
+    if(arguments.length>1)
+      isSorted = arguments[1];
+    if(arguments.length>2)
       iterator = arguments[2];
-      isSorted = arguments[1];
+
+    //classify the situations that we would see into several different cases
+    if(iterator==undefined){ //case 1 & case2: iterator is undefined
+      if(!isSorted){         //case 1: array is not sorted
+        _.each(array, function(item){
+          if(_.indexOf(result,item)==-1)
+            result.push(item);  //case 1: since array is not sorted, item being examined needs to be campared with every element in result_array;
+        });
+      }
+      else{                  //case2: array is sorted
+        if(array!=[])
+          result.push(array[0]);  //the first item will be definitely unique, push it into result
+        for(var i=1; i<array.length; i++) {
+          if(array[i]!=array[i-1])
+            result.push(array[i]);  //case 2: since array is sorted, if one item is different from the previous element, it is unique.
+        }
+      }
     }
-    else if (arguments.length>1)
-      isSorted = arguments[1];
+    else{                     //case 3 & case 4: iterator is defined, which is used as the compare reference 
+      if(array!=[]){          //we need two containers, one is for the result, the other is for the calculated compare result. 
+        result.push(array[0]);  //the first item will be definitely unique, push it and its corresponding calculated compare result into two separate arrays
+        resultTrans.push(iterator(array[0],0,array)); //everytime we push a new value into result, we need to push the corresponding calculated compare result into 2nd array too
+      }
+      for(var i=1; i<array.length; i++){
+        currentValue=iterator(array[i],i,array);
 
-    if(!isSorted)[]
-      */
+        if(!isSorted){        //case 3: array is not sorted
+          if(_.indexOf(resultTrans,currentValue)==-1){
+            result.push(array[i]);
+            resultTrans.push(currentValue);
+          }
+        }
+        
+        else{                 //case 4: array is sorted
+          if((array[i]!=array[i-1])&&(_.indexOf(resultTrans,currentValue)==-1)){
+            result.push(array[i]);    //in this case, if (array[i]==array[i-1]), the following indexOf method will not be called to save CPU
+            resultTrans.push(currentValue);
+          }
+        }
 
+      }
+    }
+
+    return result;
   };
 
 
@@ -184,7 +226,7 @@
     var memo;
     var item;
     var i;
-    
+
     if(accumulator==undefined) {
       memo = collection[0];
       i = 1;
